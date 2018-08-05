@@ -1,5 +1,7 @@
 import nmap
 import optparse
+from socket import gethostbyaddr, gethostbyname
+from threading import *
 
 
 def nmap_scan(host, port):
@@ -7,6 +9,24 @@ def nmap_scan(host, port):
     scanner.scan(host, port)
     state = scanner[host]['tcp'][int(port)]['state']
     print '[+] %s tcp/%s %s' % (host, port, state)
+
+
+def port_scan(host, ports):
+    try:
+        ip = gethostbyname(host)
+    except:
+        print "[-] Cannot resolve '%s': Unkown host" % host
+        return
+
+    try:
+        name = gethostbyaddr(ip)
+        print '\n[+] Scan Results for: ' + name[0]
+    except:
+        print '\n[+] Scan Results for: ' + ip
+
+    for port in ports:
+        t = Thread(target=nmap_scan, args=(ip, port))
+        t.start()
 
 
 def main():
@@ -23,8 +43,7 @@ def main():
         print parser.usage
         exit(0)
 
-    for port in ports:
-        nmap_scan(host, port.strip())
+    port_scan(host, ports)
 
 
 if __name__ == '__main__':
